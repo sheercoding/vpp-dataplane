@@ -26,9 +26,9 @@ REVERSE_LINES=sed -e '1!G;h;$$!d'
 DISK_SIZE_GB ?= 128
 # VM Resources
 MASTER_CPUS ?= 2
-MASTER_MEMORY_SIZE_GB ?= 4
+MASTER_MEMORY_SIZE_GB ?= 8
 NODE_CPUS ?= 2
-NODE_MEMORY_SIZE_GB ?= 4
+NODE_MEMORY_SIZE_GB ?= 8
 
 NODE_COUNT ?= 2
 
@@ -46,12 +46,12 @@ POD_NW_CIDR ?= 172.16.0.0/16
 SERVICE_CIDR ?= 10.96.0.0/12
 endif
 DNS_SERVER ?= 8.8.8.8
-VAGRANT_VM_PROXY ?= 
-
+VAGRANT_VM_PROXY ?=
+VAGRANT_VM_NO_PROXY ?=localhost,127.0.0.1,10.96.0.1,${MASTER_IP}
 KUBECTL_AUTO_CONF ?= true
 
 # Kubernetes and kubeadm
-KUBERNETES_VERSION ?= 1.22.1
+KUBERNETES_VERSION ?= 1.23.12
 #KUBERNETES_PKG_VERSION_SUFFIX ?=
 # `kubeadm init` flags for master
 # NOTE: The `--kubernetes-version` is automatically set if `KUBERNETES_VERSION` is given.
@@ -218,6 +218,9 @@ ifneq ($(strip $(NODE_FIRST_CPU)),)
 		virsh vcpupin $(CLUSTER_NAME)_node$* $$i $$((i+$(NODE_FIRST_CPU)+($(NODE)-1)*$(NODE_CPUS))); \
 	done
 endif
+
+start-node-empty-%: ## start a empty node
+	NODE=$* vagrant up
 
 start-nodes: preflight $(shell for i in $(shell seq 1 $(NODE_COUNT)); do echo "start-node-$$i"; done) ## Create and start all node VMs by utilizing the `node-X` target (automatically done by `up` target).
 
